@@ -17,7 +17,7 @@ class LowStockProductController extends Controller
 
         $threshold = (int) ($validated['threshold'] ?? 5);
 
-        $products = Product::where('stock', '<', $threshold)
+        $products = Product::where('stock', '<=', $threshold)
             ->orderBy('stock')
             ->get();
 

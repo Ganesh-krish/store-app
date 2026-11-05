@@ -43,6 +43,7 @@ function createRow() {
     <td><input type="number" class="form-control qty" min="1" step="1" value="1"></td>
     <td><input type="text" class="form-control price" value="0.00" readonly></td>
     <td><input type="text" class="form-control tax" value="0" readonly></td>
+    <td><input type="text" class="form-control taxamount" value="0.00" readonly></td>
     <td><input type="text" class="form-control total" value="0.00" readonly></td>
     <td><button type="button" class="btn btn-danger btn-sm del"><i class="bi bi-trash"></i></button></td>
   `;
@@ -76,6 +77,7 @@ function calcRow(tr) {
   const subtotal = qty * price;
   const lineTax = subtotal * tax / 100;
   const total = subtotal + lineTax;
+  tr.querySelector('.taxamount').value = lineTax.toFixed(2);
   tr.querySelector('.total').value = total.toFixed(2);
 }
 
@@ -97,7 +99,6 @@ function calcAll() {
       taxGroups[tax] = (taxGroups[tax] || 0) + lineTax;
     }
   });
-  document.getElementById('totalAmount').textContent = '₹' + grandTotal.toFixed(2);
   let sub = 0;
   document.querySelectorAll('#productTable tbody tr').forEach(tr => {
     const sel = tr.querySelector('.product-select');
@@ -124,15 +125,21 @@ function ensureOneRow() {
 }
 
 async function loadLowStock() {
-  const threshold = document.getElementById('threshold').value || 5;
-  const res = await fetch(API + '/products/low-stock?threshold=' + threshold);
-  const data = await res.json();
   const list = document.getElementById('lowStockList');
-  if (!data.products || data.products.length === 0) {
-    list.innerHTML = '<p class="text-muted">No low stock products.</p>';
-    return;
+  list.innerHTML = '<div class="spinner-border spinner-border-sm"></div>';
+  try {
+    const threshold = document.getElementById('threshold').value || 5;
+    const res = await fetch(API + '/products/low-stock?threshold=' + threshold);
+    const data = await res.json();
+    if (!res.ok) { list.innerHTML = '<p class="text-danger">Failed to load low stock.</p>'; return; }
+    if (!data.products || data.products.length === 0) {
+      list.innerHTML = '<p class="text-muted">No low stock products.</p>';
+      return;
+    }
+    list.innerHTML = data.products.map(p => `<div class="alert alert-warning py-1 mb-1"><strong>${p.name}</strong> (${p.code}) - stock: ${p.stock}</div>`).join('');
+  } catch(e) {
+    list.innerHTML = '<p class="text-danger">Failed to load low stock.</p>';
   }
-  list.innerHTML = data.products.map(p => `<div class="alert alert-warning py-1 mb-1"><strong>${p.name}</strong> (${p.code}) - stock: ${p.stock}</div>`).join('');
 }
 
 let acTimer;
@@ -248,7 +255,18 @@ async function submitOrder() {
     const res = await fetch(API + '/orders', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ customer:{name,email}, items }) });
     const data = await res.json();
     if (!res.ok) {
-      showToast(data.message || 'Order creation failed.','error');
+      let msg = data.message || 'Order creation failed.';
+      if (res.status === 422 && msg.includes('Insufficient stock')) {
+        const m = msg.match(/product ID (\d+)/);
+        const pid = m ? parseInt(m[1]) : null;
+        const prod = products.find(p => p.id === pid);
+        const name = prod ? prod.name : 'product';
+        const item = items.find(i => i.product_id === pid);
+        const req = item ? item.quantity : '';
+        const avail = prod ? prod.stock : '';
+        msg = 'Insufficient stock for ' + name + '. You requested ' + req + ' units, but only ' + avail + ' units are available. Please reduce the quantity.';
+      }
+      showToast(msg,'error');
       btn.disabled = false;
       return;
     }
@@ -264,6 +282,7 @@ async function submitOrder() {
     renumber();
     calcAll();
     document.getElementById('custEmail').focus();
+    loadLowStock();
   } catch(e) {
     showToast('Server error.','error');
   }

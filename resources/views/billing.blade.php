@@ -42,15 +42,8 @@
   <div class="card mb-3 p-3 billing-section" id="productsSection" style="display:none;">
     <h5><i class="bi bi-box-seam"></i> Products Details</h5>
     <table id="productTable" class="table table-bordered" style="background:#f1f3f5;">
-      <thead class="table-light"><tr><th>S.No</th><th>Item Name</th><th>Qty</th><th>Unit Price</th><th>Tax (%)</th><th>Amount</th><th>Action</th></tr></thead>
+      <thead class="table-light"><tr><th>S.No</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Tax (%)</th><th>Tax Amount</th><th>Line Total</th><th>Action</th></tr></thead>
       <tbody></tbody>
-      <tfoot class="table-light"><tr>
-        <td colspan="3" class="text-center fw-bold">Grand Total</td>
-        <td></td>
-        <td></td>
-        <td id="totalAmount">₹0.00</td>
-        <td></td>
-      </tr></tfoot>
     </table>
     <div class="text-end"><span class="float-end"><button id="addProductBtn" class="btn btn-secondary btn-sm" style="width:auto;">Add Product</button></span></div>
   </div>

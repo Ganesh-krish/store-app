@@ -25,6 +25,8 @@ A Laravel REST API application for managing retail orders and product inventory.
 - Prevent overselling using database transactions and row-level locking.
 - Retrieve customer order history using email.
 - Retrieve products below a configurable stock threshold.
+- Display low-stock alerts in the retail billing interface.
+- Calculate product-wise tax amounts and final line totals.
 - Dispatch a queued order confirmation job.
 - Automated feature tests for successful order creation and insufficient stock.
 
@@ -70,7 +72,7 @@ composer --version
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Ganesh-krish/store-app.git
 cd store-app
 ```
 
@@ -157,12 +159,23 @@ The interface supports:
 
 - Customer selection and registration.
 - Product selection and quantity management.
-- Automatic subtotal and tax calculation.
-- Low-stock alerts.
-- Retail bill preview.
+- Automatic line subtotal, tax amount, and line total calculation.
+- Low-stock alerts with configurable stock thresholds.
+- Retail bill preview displaying subtotal, total GST, and grand total.
 - Order creation.
 - Customer order history.
 - Individual order details.
+
+The product billing table displays the following information:
+
+- S.No
+- Product
+- Qty
+- Unit Price
+- Tax (%)
+- Tax Amount
+- Line Total
+- Action
 
 The billing interface communicates with the Laravel backend through REST API endpoints.
 
@@ -217,7 +230,7 @@ Returns `404 Not Found` if the customer does not exist.
 
 **GET** `/api/products/low-stock`
 
-Retrieves products whose available stock is below the specified threshold.
+Retrieves products whose available stock is less than or equal to the specified threshold.
 
 Default threshold: `5`
 
@@ -227,7 +240,7 @@ Custom threshold example:
 GET /api/products/low-stock?threshold=10
 ```
 
-The comparison uses `stock < threshold`.
+The comparison uses `stock <= threshold`, so products with stock equal to the threshold are also included.
 
 ## Order Calculation
 
@@ -235,7 +248,13 @@ For each order item:
 
 - Line subtotal = Unit price × Quantity
 - Line tax = Line subtotal × Tax percentage / 100
-- Grand total = Subtotal + Total tax
+- Line total = Line subtotal + Line tax
+
+For the complete order:
+
+- Subtotal = Sum of all line subtotals.
+- Total GST = Sum of all line tax amounts.
+- Grand Total = Subtotal + Total GST.
 
 The unit price and tax percentage are stored as snapshots in order items to preserve historical order values if product prices or tax rates change later.
 
@@ -253,22 +272,51 @@ MySQL InnoDB is used to support transactions and row-level locking.
 
 ## Queued Order Confirmation
 
-After a successful order transaction, the application dispatches `SendOrderConfirmationJob`.
+After a successful order transaction, the application dispatches `SendOrderConfirmationJob` to the Laravel database queue.
 
-The job simulates an order confirmation email by writing the following details to the Laravel log:
+The queued job simulates an order confirmation email by writing order and customer details to the Laravel application log.
 
-- Order ID
-- Customer name
-- Customer email
-- Grand total
+### Start the Queue Worker
 
-No SMTP configuration or external email service is required.
+Open a separate terminal in the project directory and run:
 
-Check the log at:
+```bash
+php artisan queue:work
+```
+
+Keep the queue worker running while testing order creation.
+
+### Verify Queue Processing
+
+1. Start the Laravel application using `php artisan serve`.
+2. Start the queue worker in another terminal.
+3. Create an order through the billing interface.
+4. Once the order is successfully created, the confirmation job is dispatched.
+5. Check the Laravel log to verify that the queue job was processed.
+
+### Log Location
 
 ```text
 storage/logs/laravel.log
 ```
+
+### Expected Log Format
+
+The log entry will follow this general structure:
+
+```text
+[YYYY-MM-DD HH:MM:SS] local.INFO: Order confirmation email simulated. {
+    "order_id": 1,
+    "customer_name": "Sample Customer",
+    "customer_email": "customer@example.com",
+    "grand_total": "1180.00"
+}
+```
+
+The values shown above are illustrative. Actual order IDs, customer details, timestamps, and totals depend on the orders created during testing.
+
+No SMTP configuration or external email service is required because email confirmation is simulated through Laravel logging.
+
 
 ## Automated Testing
 
@@ -305,31 +353,34 @@ The current feature tests cover:
 1. Successful order creation, total calculation, stock deduction, and job dispatch.
 2. Insufficient stock, transaction rollback, and prevention of job dispatch.
 
-
 ## AI Prompt Log
 
-AI-assisted tools were used during the development of this project for planning, implementation guidance, code generation, debugging, and development support.
+AI-assisted tools were used during the development of this project for planning, implementation guidance, code generation, debugging, frontend development, and development support.
 
 ### Tools Used
 
 **1. ChatGPT**
+
 - Laravel installation and project setup guidance.
 - Database schema design, migrations, and Eloquent relationships.
 - REST API development and validation.
 - Inventory management and concurrency handling.
 - Queue job implementation.
 - Project planning and requirement analysis.
-- Generating detailed prompts for frontend UI development.
+- Preparing, refining, and enhancing frontend UI prompts before submitting them to Kilo Code AI.
 
 **2. Kilo Code AI (VS Code Extension)**
-- Frontend billing interface development using Laravel Blade, Bootstrap, and JavaScript.
-- Assistance with frontend implementation and code modifications.
-- Git and GitHub command assistance.
+
+- Implementing the frontend billing interface using Laravel Blade, Bootstrap, and JavaScript.
+- Developing customer and product interactions.
+- Applying frontend UI improvements and modifications based on the enhanced prompts.
+- Assistance with Git and GitHub commands.
 
 ### Prompt Screenshots
 
-Screenshots of the actual prompts used with AI-assisted tools, along with brief descriptions, are available in the [`prompts/`](prompts/) directory.
+Screenshots of the enhanced frontend UI prompts submitted to Kilo Code AI, along with brief descriptions, are available in the [`prompts/`](prompts/) directory.
 
+These prompts were initially prepared and refined with ChatGPT before being used for frontend implementation.
 
 ## Assumptions and Design Decisions
 
@@ -341,7 +392,7 @@ Screenshots of the actual prompts used with AI-assisted tools, along with brief 
 - Product quantities must be positive integers.
 - An order cannot be created if the requested quantity exceeds available stock.
 - The low-stock threshold defaults to 5 and can be configured through a query parameter.
-- Low-stock filtering uses a strict less-than comparison.
+- Low-stock filtering includes products whose available stock is less than or equal to the configured threshold.
 - Product price and tax percentage are stored as snapshots in order items.
 - Product and customer CRUD operations are outside the scope of the assignment.
 - Order confirmation is simulated through Laravel logging instead of sending an actual email.
