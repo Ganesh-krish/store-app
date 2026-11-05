@@ -11,7 +11,9 @@ A Laravel REST API application for managing retail orders and product inventory.
 - Eloquent ORM
 - Laravel Database Queue
 - PHPUnit
-- Laravel Blade, Bootstrap 5 and Vanilla JavaScript (billing interface)
+- Laravel Blade
+- Bootstrap 5
+- Vanilla JavaScript
 
 ## Features
 
@@ -35,14 +37,26 @@ Before setting up the project, ensure the following are installed:
 - MySQL 8.0 or a compatible MySQL installation.
 - Git.
 
-**Note for Windows users:** Laravel 13 requires PHP 8.3 or later. You can install PHP 8.3 separately and configure its executable in your Windows PATH. XAMPP can be used independently to run the MySQL database server.
+### Windows Environment Setup
 
-The PHP version used by the command line must meet Laravel's requirements. XAMPP's bundled PHP version does not need to be used if you are using standalone PHP.
+Laravel 13 requires PHP 8.3 or later.
+
+On Windows, PHP 8.3 can be installed separately as a standalone version and its executable path can be configured in the system PATH environment variable.
+
+XAMPP can be used independently to run the MySQL database server. You do not need to use XAMPP's bundled PHP version if standalone PHP 8.3 is configured for the command line.
+
+Ensure that the command line uses PHP 8.3 or later.
 
 Verify the PHP version:
 
 ```bash
 php -v
+```
+
+Verify the PHP executable location:
+
+```bash
+where php
 ```
 
 Verify Composer:
@@ -68,7 +82,21 @@ composer install
 
 ### 3. Configure environment
 
-Copy `.env.example` to `.env` and configure your database connection:
+Copy `.env.example` to `.env`.
+
+For Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+For Linux/macOS:
+
+```bash
+cp .env.example .env
+```
+
+Configure your database connection in the `.env` file:
 
 ```env
 DB_CONNECTION=mysql
@@ -120,6 +148,23 @@ php artisan queue:work
 ```
 
 The worker processes queued order confirmation jobs and writes simulated email details to the Laravel log.
+
+## Web Interface
+
+The application includes a Laravel Blade-based retail billing interface.
+
+The interface supports:
+
+- Customer selection and registration.
+- Product selection and quantity management.
+- Automatic subtotal and tax calculation.
+- Low-stock alerts.
+- Retail bill preview.
+- Order creation.
+- Customer order history.
+- Individual order details.
+
+The billing interface communicates with the Laravel backend through REST API endpoints.
 
 ## API Endpoints
 
@@ -229,7 +274,7 @@ storage/logs/laravel.log
 
 A separate testing database is used to protect development data.
 
-Create a database named `store_test` and configure `.env.testing`:
+Create a MySQL database named `store_test` and configure `.env.testing`:
 
 ```env
 APP_ENV=testing
@@ -259,6 +304,32 @@ The current feature tests cover:
 
 1. Successful order creation, total calculation, stock deduction, and job dispatch.
 2. Insufficient stock, transaction rollback, and prevention of job dispatch.
+
+
+## AI Prompt Log
+
+AI-assisted tools were used during the development of this project for planning, implementation guidance, code generation, debugging, and development support.
+
+### Tools Used
+
+**1. ChatGPT**
+- Laravel installation and project setup guidance.
+- Database schema design, migrations, and Eloquent relationships.
+- REST API development and validation.
+- Inventory management and concurrency handling.
+- Queue job implementation.
+- Project planning and requirement analysis.
+- Generating detailed prompts for frontend UI development.
+
+**2. Kilo Code AI (VS Code Extension)**
+- Frontend billing interface development using Laravel Blade, Bootstrap, and JavaScript.
+- Assistance with frontend implementation and code modifications.
+- Git and GitHub command assistance.
+
+### Prompt Screenshots
+
+Screenshots of the actual prompts used with AI-assisted tools, along with brief descriptions, are available in the [`prompts/`](prompts/) directory.
+
 
 ## Assumptions and Design Decisions
 
