@@ -1,8 +1,8 @@
 # AI Prompt Log
 
-This directory contains screenshots of the frontend development prompts used during the development of the Store Order & Inventory Mini-System.
+This directory contains screenshots of the AI-assisted prompts used during the development and testing of the Store Order & Inventory Mini-System.
 
-AI-assisted tools were used to prepare, refine, and implement frontend requirements, improve the user interface, debug issues, and make iterative changes based on the application's requirements.
+AI-assisted tools were used to prepare, refine, and implement application requirements, improve the user interface, debug issues, write feature tests, and make iterative improvements.
 
 ## AI Tools Used
 
@@ -11,9 +11,10 @@ AI-assisted tools were used to prepare, refine, and implement frontend requireme
 Used for:
 
 - Preparing and refining frontend UI development prompts.
-- Converting UI requirements into clear and structured implementation instructions.
-- Improving prompts based on the generated frontend output.
-- Reviewing UI behaviour and suggesting necessary refinements.
+- Converting requirements into clear and structured implementation instructions.
+- Providing backend development and debugging guidance.
+- Reviewing application behaviour and suggesting improvements.
+- Preparing prompts for additional automated feature tests.
 
 ### 2. Kilo Code AI (VS Code Extension)
 
@@ -24,11 +25,12 @@ Used for:
 - Implementing the customer order history interface.
 - Improving the UI based on iterative requirements.
 - Debugging frontend issues and making UI refinements.
+- Adding additional automated feature tests.
 - Assistance with Git and GitHub commands.
 
 ## Prompt Documentation
 
-The following six prompts represent the main stages of frontend development. Related UI improvements and refinements have been grouped under their corresponding implementation prompts.
+The following seven prompts represent the main stages of development and testing. Related improvements and refinements have been grouped under their corresponding implementation prompts.
 
 ### Phase 1: Billing Interface Development
 
@@ -67,6 +69,18 @@ Also includes improvements to the order history table, customer information disp
 Investigating and fixing the Low Stock Alerts section, which was incorrectly displaying an empty state despite products having low stock.
 
 Refining the threshold condition to include products with stock less than or equal to 5, verifying API response handling and frontend rendering, and refreshing the alert list after successful order creation.
+
+### Phase 4: Automated Feature Testing
+
+**07. Additional Order Creation Feature Tests**
+
+Extending the existing Laravel feature tests by adding three additional test scenarios:
+
+- Multiple products in a single order: verifying subtotal, tax, grand total, order items, and individual product stock deductions.
+- Invalid quantity validation: verifying that a zero quantity is rejected, no order or order items are created, and product stock remains unchanged.
+- Existing customer reuse: verifying that an existing customer is reused based on email address without creating a duplicate customer record, while retaining the existing customer's name.
+
+The additional tests were implemented in the existing `CreateOrderTest.php` file without changing the application's business logic.
 
 ## Screenshot Naming Convention
 
@@ -108,10 +122,14 @@ Example:
 06-low-stock-alerts-fix-02.png
 06-low-stock-alerts-fix-03.png
 06-low-stock-alerts-fix-04.png
+
+07-order-creation-feature-tests-01.png
 ```
 
 ## Note
 
 The screenshots document the enhanced frontend UI prompts submitted to Kilo Code AI. These prompts were initially prepared and refined with ChatGPT before being used for frontend implementation.
 
-Related refinement requests have been grouped with their corresponding main prompts to keep the documentation concise while reflecting the iterative development process, including initial implementation, requirement changes, UI improvements, and debugging.
+The additional feature testing prompt documents the instructions used to extend the existing automated tests.
+
+Related refinement requests have been grouped with their corresponding main prompts to keep the documentation concise while reflecting the iterative development process, including initial implementation, requirement changes, UI improvements, debugging, and testing.

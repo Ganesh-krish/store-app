@@ -103,4 +103,64 @@ class CreateOrderTest extends TestCase
 
         Queue::assertNothingPushed();
     }
+    public function test_multiple_products_in_single_order(): void
+    {
+        Queue::fake();
+
+        $product1 = Product::factory()->create(['price' => 100.00, 'tax_percentage' => 18, 'stock' => 10]);
+        $product2 = Product::factory()->create(['price' => 50.00, 'tax_percentage' => 12, 'stock' => 5]);
+
+        $response = $this->postJson('/api/orders', [
+            'customer' => ['name' => 'Test User', 'email' => 'test@example.com'],
+            'items' => [
+                ['product_id' => $product1->id, 'quantity' => 2],
+                ['product_id' => $product2->id, 'quantity' => 1],
+            ],
+        ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.subtotal', '250.00');
+        $response->assertJsonPath('data.tax', '42.00');
+        $response->assertJsonPath('data.grand_total', '292.00');
+
+        $this->assertDatabaseHas('products', ['id' => $product1->id, 'stock' => 8]);
+        $this->assertDatabaseHas('products', ['id' => $product2->id, 'stock' => 4]);
+    }
+
+    public function test_invalid_quantity_zero(): void
+    {
+        Queue::fake();
+
+        $product = Product::factory()->create(['price' => 100.00, 'tax_percentage' => 18, 'stock' => 10]);
+
+        $response = $this->postJson('/api/orders', [
+            'customer' => ['name' => 'Test User', 'email' => 'test@example.com'],
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 0],
+            ],
+        ]);
+
+        $response->assertUnprocessable();
+        $this->assertDatabaseMissing('orders', []);
+        $this->assertDatabaseHas('products', ['id' => $product->id, 'stock' => 10]);
+    }
+
+    public function test_existing_customer_reuse(): void
+    {
+        Queue::fake();
+
+        $customer = Customer::factory()->create(['name' => 'Original Name', 'email' => 'existing@example.com']);
+        $product = Product::factory()->create(['price' => 100.00, 'tax_percentage' => 18, 'stock' => 10]);
+
+        $response = $this->postJson('/api/orders', [
+            'customer' => ['name' => 'Different Name', 'email' => 'existing@example.com'],
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+        ]);
+
+        $response->assertCreated();
+        $this->assertEquals(1, Customer::where('email', 'existing@example.com')->count());
+        $this->assertDatabaseHas('customers', ['id' => $customer->id, 'name' => 'Original Name']);
+    }
 }
