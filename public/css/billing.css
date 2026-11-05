@@ -1,0 +1,8 @@
+body { background:#f4f6f9; }
+.navbar-brand { font-weight:600; }
+.card { border-radius:10px; }
+.low-stock { background:#fff3cd; }
+
+#productTable input,#productTable select{border:none;outline:none;box-shadow:none;background:transparent;}
+
+#productTable thead,#productTable tfoot{background:#e9ecef;}
