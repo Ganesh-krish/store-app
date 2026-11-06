@@ -345,7 +345,7 @@ The PHPUnit configuration is set up to use MySQL and `store_test` instead of an 
 Run the feature tests:
 
 ```bash
-php artisan test
+    php artisan test --filter=CreateOrderTest
 ```
 
 The current feature tests cover:
